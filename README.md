@@ -190,7 +190,6 @@ Lalu:
 
 Project ini bersifat **open-source** (MIT / free to use).
 
-```
 
 ### 🎮
 <p align="center">
