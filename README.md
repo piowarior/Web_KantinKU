@@ -46,22 +46,32 @@ Aplikasi ini memungkinkan:
 
 ```
 
-┌─────────────────┐
-| Frontend (Vue/HTML) |
-└─────────▲─────────┘
-│ REST API
-┌─────────▼─────────┐
-|     Laravel App   |
-| - API Routes      |
-| - Controllers     |
-| - Models          |
-| - Auth            |
-└─────────▲─────────┘
-│
-┌────┴─────┐
-|  MySQL   |
-└──────────┘
-(Docker)
+┌───────────────────────────────┐
+│          Client Side          │
+│  (Browser / Web Interface)   │
+│  - HTML / Blade              │
+│  - CSS / JavaScript          │
+└───────────────┬───────────────┘
+                │ HTTP Request
+                │ (REST API)
+┌───────────────▼───────────────┐
+│        Backend Service        │
+│           Laravel             │
+│  - API Routes                 │
+│  - Controllers                │
+│  - Business Logic             │
+│  - Authentication             │
+└───────────────┬───────────────┘
+                │ Query / ORM
+┌───────────────▼───────────────┐
+│           Database            │
+│            MySQL              │
+│  - User                       │
+│  - Menu                       │
+│  - Order                      │
+│  - Transaction                │
+└───────────────────────────────┘
+
 
 ````
 
