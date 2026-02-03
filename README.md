@@ -1,6 +1,6 @@
 ## 📌 README.md — Sistem Pemesanan Makanan & Kasir Berbasis Web
 
-```markdown
+
 # 🥡 Web KantinKU
 
 **Web KantinKU** adalah aplikasi web untuk sistem pemesanan makanan kantin sekolah (order makanan + kasir) yang dibangun menggunakan:
@@ -40,45 +40,6 @@ Aplikasi ini memungkinkan:
 - Melihat total transaksi harian
 - Riwayat pesanan
 
----
-
-## 🧱 Arsitektur
-
-```
-
-flowchart LR
-    %% ===== ACTORS =====
-    U[Pelanggan]
-    K[Kasir]
-    D[Dapur]
-
-    %% ===== DOCKER ENV =====
-    subgraph Docker Environment
-        N[Nginx]
-        FE[Frontend Web]
-        BE[Laravel REST API]
-        DB[(MySQL Database)]
-
-        N --> FE
-        FE --> BE
-        BE --> DB
-    end
-
-    %% ===== USER FLOW =====
-    U -->|Pilih Menu & Checkout| FE
-    FE -->|POST /api/order| BE
-    BE -->|Simpan Order| DB
-
-    FE -->|POST /api/payment| BE
-    BE -->|Simpan Transaksi| DB
-
-    %% ===== INTERNAL ROLES =====
-    K -->|Monitoring & Transaksi| FE
-    D -->|Update Status Pesanan| FE
-
-
-
-````
 
 ---
 
