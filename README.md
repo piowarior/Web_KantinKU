@@ -46,31 +46,36 @@ Aplikasi ini memungkinkan:
 
 ```
 
-┌───────────────────────────────┐
-│          Client Side          │
-│  (Browser / Web Interface)   │
-│  - HTML / Blade              │
-│  - CSS / JavaScript          │
-└───────────────┬───────────────┘
-                │ HTTP Request
-                │ (REST API)
-┌───────────────▼───────────────┐
-│        Backend Service        │
-│           Laravel             │
-│  - API Routes                 │
-│  - Controllers                │
-│  - Business Logic             │
-│  - Authentication             │
-└───────────────┬───────────────┘
-                │ Query / ORM
-┌───────────────▼───────────────┐
-│           Database            │
-│            MySQL              │
-│  - User                       │
-│  - Menu                       │
-│  - Order                      │
-│  - Transaction                │
-└───────────────────────────────┘
+flowchart LR
+    %% ===== ACTORS =====
+    U[Pelanggan]
+    K[Kasir]
+    D[Dapur]
+
+    %% ===== DOCKER ENV =====
+    subgraph Docker Environment
+        N[Nginx]
+        FE[Frontend Web]
+        BE[Laravel REST API]
+        DB[(MySQL Database)]
+
+        N --> FE
+        FE --> BE
+        BE --> DB
+    end
+
+    %% ===== USER FLOW =====
+    U -->|Pilih Menu & Checkout| FE
+    FE -->|POST /api/order| BE
+    BE -->|Simpan Order| DB
+
+    FE -->|POST /api/payment| BE
+    BE -->|Simpan Transaksi| DB
+
+    %% ===== INTERNAL ROLES =====
+    K -->|Monitoring & Transaksi| FE
+    D -->|Update Status Pesanan| FE
+
 
 
 ````
