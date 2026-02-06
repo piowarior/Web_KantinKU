@@ -26,7 +26,6 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
         'name',
         'email',
         'password',
-        'role',
     ];
 
     /**
@@ -67,4 +66,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     {
         return true;
     }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
 }

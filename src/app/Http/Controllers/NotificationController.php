@@ -14,14 +14,13 @@ class NotificationController extends Controller
      *     path="/api/notifications",
      *     operationId="getNotifications",
      *     tags={"Notifications"},
-     *     summary="Get all notifications",
-     *     description="Returns a list of all notifications.",
+     *     summary="Get all notifications (by user)",
+     *     description="Returns notifications for authenticated user.",
      *     security={{"ApiKeyAuth":{}}},
      *     @OA\Response(
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             type="object",
      *             @OA\Property(property="message", type="string", example="success"),
      *             @OA\Property(
      *                 property="data",
@@ -29,23 +28,20 @@ class NotificationController extends Controller
      *                 @OA\Items(ref="#/components/schemas/Notification")
      *             )
      *         )
-     *     ),
-     *     @OA\Response(response=401, description="Unauthorized - Invalid API Key")
+     *     )
      * )
      */
     public function index()
     {
-        $data = Notification::all();
+        $data = Notification::where('user_id', auth()->id())->get();
 
         $responseData = [
             'message' => 'success',
             'data' => $data,
         ];
 
-        $encryptResponse = EncryptionHelper::encrypt(json_encode($responseData));
-
         return response()->json([
-            'data' => $encryptResponse,
+            'data' => EncryptionHelper::encrypt(json_encode($responseData)),
         ]);
     }
 
@@ -55,53 +51,44 @@ class NotificationController extends Controller
      *     operationId="storeNotification",
      *     tags={"Notifications"},
      *     summary="Create a new notification",
-     *     description="Stores a new notification and returns the encrypted response.",
+     *     description="Stores a new notification for authenticated user.",
      *     security={{"ApiKeyAuth":{}}},
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"user_id", "title", "message"},
-     *             @OA\Property(property="user_id", type="integer", example=1),
-     *             @OA\Property(property="title", type="string", example="Pengumuman"),
-     *             @OA\Property(property="message", type="string", example="Besok libur nasional."),
-     *             @OA\Property(property="read", type="boolean", example=false)
+     *             required={"title", "message"},
+     *             @OA\Property(property="title", type="string", example="Order Update"),
+     *             @OA\Property(property="message", type="string", example="Pesanan kamu sedang diproses")
      *         )
      *     ),
      *     @OA\Response(
      *         response=200,
-     *         description="Notification created",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="eyJpdiI6In...")
-     *         )
-     *     ),
-     *     @OA\Response(response=500, description="Error storing notification")
+     *         description="Notification created"
+     *     )
      * )
      */
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
             'title' => 'required|string|max:255',
             'message' => 'required|string',
-            'read' => 'nullable|boolean',
         ]);
 
-        try {
-            $notif = Notification::create($validated);
+        $notif = Notification::create([
+            'user_id' => auth()->id(),
+            'title' => $validated['title'],
+            'message' => $validated['message'],
+            'read' => false,
+        ]);
 
-            $responseData = [
-                'message' => 'Notification created successfully',
-                'data' => $notif,
-            ];
+        $responseData = [
+            'message' => 'Notification created successfully',
+            'data' => $notif,
+        ];
 
-            $encryptedResponse = EncryptionHelper::encrypt(json_encode($responseData));
-
-            return response()->json(['data' => $encryptedResponse]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'error' => 'Error storing notification: ' . $e->getMessage(),
-            ], 500);
-        }
+        return response()->json([
+            'data' => EncryptionHelper::encrypt(json_encode($responseData)),
+        ]);
     }
 
     /**
@@ -109,43 +96,32 @@ class NotificationController extends Controller
      *     path="/api/notifications/{id}",
      *     operationId="getNotificationById",
      *     tags={"Notifications"},
-     *     summary="Get a notification by ID",
-     *     description="Returns a single notification",
+     *     summary="Get notification by ID",
      *     security={{"ApiKeyAuth":{}}},
      *     @OA\Parameter(
      *         name="id",
      *         in="path",
      *         required=true,
-     *         description="Notification ID",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Successful operation",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="eyJpdiI6In...")
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Notification not found"),
-     *     @OA\Response(response=401, description="Unauthorized")
+     *         @OA\Schema(type="integer")
+     *     )
      * )
      */
     public function show($id)
     {
-        $notif = Notification::find($id);
+        $notif = Notification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         if (!$notif) {
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
-        $responseData = [
-            'message' => 'success',
-            'data' => $notif,
-        ];
-
-        $encrypted = EncryptionHelper::encrypt(json_encode($responseData));
-
-        return response()->json(['data' => $encrypted]);
+        return response()->json([
+            'data' => EncryptionHelper::encrypt(json_encode([
+                'message' => 'success',
+                'data' => $notif,
+            ]))
+        ]);
     }
 
     /**
@@ -153,46 +129,21 @@ class NotificationController extends Controller
      *     path="/api/notifications/{id}",
      *     operationId="updateNotification",
      *     tags={"Notifications"},
-     *     summary="Update a notification",
-     *     description="Updates an existing notification",
-     *     security={{"ApiKeyAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="Notification ID",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             @OA\Property(property="title", type="string", example="Update Jadwal"),
-     *             @OA\Property(property="message", type="string", example="Jadwal kuliah berubah."),
-     *             @OA\Property(property="read", type="boolean", example=true),
-     *             @OA\Property(property="user_id", type="integer", example=1)
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Notification updated successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="eyJpdiI6In...")
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Notification not found"),
-     *     @OA\Response(response=401, description="Unauthorized")
+     *     summary="Update notification (title, message, read)",
+     *     security={{"ApiKeyAuth":{}}}
      * )
      */
     public function update(Request $request, $id)
     {
-        $notif = Notification::find($id);
+        $notif = Notification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         if (!$notif) {
             return response()->json(['message' => 'Notification not found'], 404);
         }
 
         $validated = $request->validate([
-            'user_id' => 'sometimes|exists:users,id',
             'title' => 'sometimes|string|max:255',
             'message' => 'sometimes|string',
             'read' => 'sometimes|boolean',
@@ -200,14 +151,12 @@ class NotificationController extends Controller
 
         $notif->update($validated);
 
-        $responseData = [
-            'message' => 'Notification updated successfully',
-            'data' => $notif,
-        ];
-
-        $encrypted = EncryptionHelper::encrypt(json_encode($responseData));
-
-        return response()->json(['data' => $encrypted]);
+        return response()->json([
+            'data' => EncryptionHelper::encrypt(json_encode([
+                'message' => 'Notification updated successfully',
+                'data' => $notif,
+            ]))
+        ]);
     }
 
     /**
@@ -215,30 +164,15 @@ class NotificationController extends Controller
      *     path="/api/notifications/{id}",
      *     operationId="deleteNotification",
      *     tags={"Notifications"},
-     *     summary="Delete a notification",
-     *     description="Deletes a notification by ID",
-     *     security={{"ApiKeyAuth":{}}},
-     *     @OA\Parameter(
-     *         name="id",
-     *         in="path",
-     *         required=true,
-     *         description="Notification ID",
-     *         @OA\Schema(type="integer", example=1)
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Notification deleted successfully",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="data", type="string", example="eyJpdiI6In...")
-     *         )
-     *     ),
-     *     @OA\Response(response=404, description="Notification not found"),
-     *     @OA\Response(response=401, description="Unauthorized")
+     *     summary="Delete notification",
+     *     security={{"ApiKeyAuth":{}}}
      * )
      */
     public function destroy($id)
     {
-        $notif = Notification::find($id);
+        $notif = Notification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
         if (!$notif) {
             return response()->json(['message' => 'Notification not found'], 404);
@@ -246,14 +180,41 @@ class NotificationController extends Controller
 
         $notif->delete();
 
-        $responseData = [
-            'message' => 'Notification deleted successfully',
-            'data' => ['id' => $id],
-        ];
+        return response()->json([
+            'data' => EncryptionHelper::encrypt(json_encode([
+                'message' => 'Notification deleted successfully',
+                'data' => ['id' => $id],
+            ]))
+        ]);
+    }
 
-        $encrypted = EncryptionHelper::encrypt(json_encode($responseData));
+    /**
+     * @OA\Post(
+     *     path="/api/notifications/mark-read/{id}",
+     *     operationId="markNotificationRead",
+     *     tags={"Notifications"},
+     *     summary="Mark notification as read",
+     *     security={{"ApiKeyAuth":{}}}
+     * )
+     */
+    public function markAsRead($id)
+    {
+        $notif = Notification::where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
 
-        return response()->json(['data' => $encrypted]);
+        if (!$notif) {
+            return response()->json(['message' => 'Notification not found'], 404);
+        }
+
+        $notif->update(['read' => true]);
+
+        return response()->json([
+            'data' => EncryptionHelper::encrypt(json_encode([
+                'message' => 'Notification marked as read',
+                'data' => $notif,
+            ]))
+        ]);
     }
 
     /**
@@ -262,39 +223,14 @@ class NotificationController extends Controller
      *     operationId="decryptNotificationResponse",
      *     tags={"Notifications"},
      *     summary="Decrypt encrypted notification data",
-     *     description="Decrypts the encrypted notification response.",
-     *     security={{"ApiKeyAuth":{}}},
-     *     @OA\RequestBody(
-     *         required=true,
-     *         @OA\JsonContent(
-     *             required={"data"},
-     *             @OA\Property(property="data", type="string", example="eyJpdiI6IjFPU2h...")
-     *         )
-     *     ),
-     *     @OA\Response(
-     *         response=200,
-     *         description="Decrypted response",
-     *         @OA\JsonContent(
-     *             @OA\Property(property="message", type="string", example="success"),
-     *             @OA\Property(
-     *                 property="data",
-     *                 type="array",
-     *                 @OA\Items(ref="#/components/schemas/Notification")
-     *             )
-     *         )
-     *     ),
-     *     @OA\Response(response=400, description="Decryption failed")
+     *     security={{"ApiKeyAuth":{}}}
      * )
      */
     public function decryptResponse(Request $request)
     {
-        $encryptData = $request->input('data');
-
         try {
-            $decryptedJson = EncryptionHelper::decrypt($encryptData);
-            $decoded = json_decode($decryptedJson, true);
-
-            return response()->json($decoded);
+            $decryptedJson = EncryptionHelper::decrypt($request->data);
+            return response()->json(json_decode($decryptedJson, true));
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Decrypt Failed',

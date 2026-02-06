@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->integer('price');
-            $table->date('available_date');
+            $table->string('category')->nullable();
+            $table->string('image')->nullable();
+            $table->boolean('is_available')->default(true);
             $table->timestamps();
         });
 

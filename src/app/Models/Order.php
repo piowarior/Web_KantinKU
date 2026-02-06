@@ -9,15 +9,23 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'menu_id', 'quantity', 'notes', 'status'];
+    protected $fillable = ['user_id', 'order_code', 'order_type', 'status', 'total_price'];
+
+    public function items()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function menu()
+    public static function generateOrderCode(): string
     {
-        return $this->belongsTo(Menu::class);
+        $prefix = chr(rand(65, 90)); // A-Z
+        $number = rand(10, 99);
+
+        return $prefix . $number;
     }
 }

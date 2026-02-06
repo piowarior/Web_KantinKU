@@ -60,11 +60,11 @@ class MenuController extends Controller
      *     @OA\RequestBody(
      *         required=true,
      *         @OA\JsonContent(
-     *             required={"name", "price", "available_date"},
+     *             required={"name", "price", "is_available"},
      *             @OA\Property(property="name", type="string", example="Nasi Goreng"),
      *             @OA\Property(property="description", type="string", example="Nasi goreng dengan ayam dan telur"),
      *             @OA\Property(property="price", type="integer", example=25000),
-     *             @OA\Property(property="available_date", type="string", format="date", example="2025-07-21")
+     *             @OA\Property(property="is_available", type="string", format="date", example="2025-07-21")
      *         )
      *     ),
      *     @OA\Response(
@@ -83,7 +83,7 @@ class MenuController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|integer',
-            'available_date' => 'required|date',
+            'is_available' => 'required|date',
         ]);
 
         try {
@@ -169,7 +169,7 @@ class MenuController extends Controller
      *             @OA\Property(property="name", type="string", example="Updated Menu"),
      *             @OA\Property(property="description", type="string", example="Updated description"),
      *             @OA\Property(property="price", type="integer", example=30000),
-     *             @OA\Property(property="available_date", type="string", format="date", example="2025-07-22")
+     *             @OA\Property(property="is_available", type="string", format="date", example="2025-07-22")
      *         )
      *     ),
      *     @OA\Response(
@@ -195,7 +195,7 @@ class MenuController extends Controller
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|integer',
-            'available_date' => 'sometimes|date',
+            'is_available' => 'sometimes|date',
         ]);
 
         $menu->update($validated);

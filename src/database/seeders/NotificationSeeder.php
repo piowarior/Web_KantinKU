@@ -13,17 +13,7 @@ class NotificationSeeder extends Seeder
         $user = User::where('email', 'user@admin.com')->first();
 
         if ($user) {
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Pesanan Diterima',
-                'message' => 'Pesanan Anda telah diterima dan sedang diproses.',
-            ]);
-
-            Notification::create([
-                'user_id' => $user->id,
-                'title' => 'Pesanan Selesai',
-                'message' => 'Pesanan Anda telah selesai dan siap diambil.',
-            ]);
+            
         }
     }
 }

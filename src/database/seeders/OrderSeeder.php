@@ -15,14 +15,12 @@ class OrderSeeder extends Seeder
         if ($user) {
             Order::create([
                 'user_id' => $user->id,
-                'menu_id' => 1, // ID menu pertama (Nasi Goreng)
                 'quantity' => 2,
                 'status' => 'pending',
             ]);
 
             Order::create([
                 'user_id' => $user->id,
-                'menu_id' => 2, // ID menu kedua (Mie Ayam)
                 'quantity' => 1,
                 'status' => 'done',
             ]);

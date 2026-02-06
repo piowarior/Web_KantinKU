@@ -11,23 +11,19 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notifications', function (Blueprint $table) {
+        Schema::create('order_items', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')
-                  ->nullable()
-                  ->constrained()
-                  ->nullOnDelete();
-
             $table->foreignId('order_id')
-                  ->nullable()
                   ->constrained()
                   ->cascadeOnDelete();
 
-            $table->string('type'); // order_ready, order_called
-            $table->string('title');
-            $table->text('message');
-            $table->boolean('is_read')->default(false);
+            $table->foreignId('menu_id')
+                  ->constrained()
+                  ->cascadeOnDelete();
+
+            $table->integer('quantity');
+            $table->integer('price'); // snapshot harga
 
             $table->timestamps();
         });
@@ -38,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notifications');
+        Schema::dropIfExists('order_items');
     }
 };
